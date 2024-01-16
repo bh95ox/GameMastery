@@ -1,0 +1,24 @@
+{
+    "Setting_ParticleFX": {
+        "instanceID": 0
+    },
+    "Setting_Resolution": {
+        "instanceID": 0
+    },
+    "Setting_Quality": {
+        "instanceID": 0
+    },
+    "Setting_Anti_Al": {
+        "instanceID": 0
+    },
+    "Setting_Mouse_SenX": 30.105253219604493,
+    "Setting_FullScreen": false,
+    "Setting_Mute": false,
+    "Setting_MotionB": false,
+    "Setting_VSync": false,
+    "Setting_FPSLimiter": 0,
+    "Setting_MasterAux": -7.764713764190674,
+    "Setting_MusicAux": 0.0,
+    "Setting_SoundFXAux": -28.941171646118165,
+    "Setting_UIFXAux": 0.0
+}
