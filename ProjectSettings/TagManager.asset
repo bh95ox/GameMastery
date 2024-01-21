@@ -8,15 +8,19 @@ TagManager:
   - AudioManager
   - InputManager
   - DataManager
+  - GameManager
+  - InventoryManager
+  - GameDataManager
+  - Bullet
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Interactables
   - Water
   - UI
-  - 
-  - 
+  - Targets
+  - Ground
   - 
   - 
   - 

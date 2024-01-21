@@ -66,8 +66,6 @@ namespace Managers
                     {
                         Instantiate(SettingManager);
                         Debug.Log("Setting Manager Up and Running");
-
-
                     }
                 }
             }
@@ -182,23 +180,31 @@ namespace Managers
         }
 
 
-        public void NeedManager(string ManagerName)
+        public GameObject NeedManager(string ManagerName)
         {
             if (ManagerName == "SettingManager")
             {
                 Instantiate(SettingManager);
+                return SettingManager;
             }
             else if (ManagerName == "InputManager")
             {
                 Instantiate(InputManager);
+                return InputManager;
             }
             else if (ManagerName == "AudioManager")
             {
                 Instantiate(AudioManager);
+                return AudioManager;
             }
             else if (ManagerName == "DataManager")
             {
                 Instantiate(DataManager);
+                return DataManager;
+            }
+            else
+            {
+                return null;
             }
         }
     }
