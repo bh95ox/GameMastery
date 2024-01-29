@@ -1,29 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using MachineLearning_AI;
 
 namespace MachineLearning_AI
 {
     [RequireComponent(typeof(AI_StateControl))]
     public class AI_Health : MonoBehaviour, IDamageble
     {
-        [SerializeField] private float Max_Health = 100;
-        [SerializeField] private float HealingRate;
-
+        public float GetHealth { get { return Health; } private set { } }
+        public float Max_Health = 100;
         public bool NeedHealing;
         public bool HealingInProgress;
-        public float GetHealth { get { return Health; } private set { } }
 
-        //private AI_StateControl StateControl;
-        private AI_Sensor sensor;
-        public float Health;
+        private AICore AI;
+        private float Health;
         private bool Alive;
 
         private void Start()
         {
-            //gameObject.TryGetComponent<AI_StateControl>(out StateControl);
-            TryGetComponent<AI_Sensor>(out sensor);
+            AI = gameObject.GetComponent<AICore>();
+
             Health = Max_Health;
             Alive = true;
         }
@@ -64,9 +60,7 @@ namespace MachineLearning_AI
             }
 
             HealingInProgress = false;
-            //HealingObject.SetActive(false);
-            sensor.RemoveItem(HealingObject);
-            Destroy(HealingObject);
+            AI.sensor.RemoveItem(HealingObject);
             Debug.Log("Healing Done");
         }
 

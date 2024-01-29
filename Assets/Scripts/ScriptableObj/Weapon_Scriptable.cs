@@ -9,10 +9,12 @@ public class Weapon_Scriptable : ScriptableObject
     public string Weapon_Name;
     public string Weapon_Type;
     public string Weapon_Description;
-    public float Weapon_MaxDamage;
-    public float Weapon_MinDamage;
+    public string Weapon_BulletType;
+    public float Weapon_FireRate;
+    public float Weapon_Damage;
     public int Weapon_Price;
     public Sprite Weapon_UI_ICON;
     public GameObject Weappon_Prefab;
+    public GameObject Bullet_Prefab;
 
 }

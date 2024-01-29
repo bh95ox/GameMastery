@@ -6,7 +6,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerLocomotion : MonoBehaviour
+public class PlayerLocomotion : MonoBehaviour, IDamageble
 {
     private CharacterController characterController;
     public Transform cameraContainer;
@@ -25,6 +25,9 @@ public class PlayerLocomotion : MonoBehaviour
 
     private Vector3 moveDirection = Vector3.zero;
     float rotateX, rotateY;
+
+
+    public float Health = 100f;
 
     void Start()
     {
@@ -47,6 +50,11 @@ public class PlayerLocomotion : MonoBehaviour
         Locomotion();
         RotateAndLook();
 
+        if(Health < 0)
+        {
+            Debug.Log("You Died");
+            gameObject.SetActive(false);
+        }
     }
 
     private void Locomotion()
@@ -97,4 +105,13 @@ public class PlayerLocomotion : MonoBehaviour
         cameraContainer.transform.localRotation = Quaternion.Euler(rotateY, 0f, 0f);
     }
 
+    public void TakeDamage(float DamageAmount)
+    {
+        Health -= DamageAmount;
+    }
+
+    public string GetObjectName()
+    {
+        return gameObject.name;
+    }
 }

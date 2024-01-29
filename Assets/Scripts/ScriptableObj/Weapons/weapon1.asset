@@ -15,8 +15,12 @@ MonoBehaviour:
   Weapon_Name: AK47
   Weapon_Type: 
   Weapon_Description: 
-  Weapon_MaxDamage: 0
-  Weapon_MinDamage: 0
-  Weapon_Price: 0
+  Weapon_BulletType: Medium
+  Weapon_FireRate: 2
+  Weapon_Damage: 30
+  Weapon_Price: 120
   Weapon_UI_ICON: {fileID: 0}
-  Weappon_Prefab: {fileID: 0}
+  Weappon_Prefab: {fileID: 7067558999488818079, guid: df86fcb0f364b264ebcaccd776b57bbf,
+    type: 3}
+  Bullet_Prefab: {fileID: 7703099631495368498, guid: 3006b8193ad54f542854a0c20fc87369,
+    type: 3}

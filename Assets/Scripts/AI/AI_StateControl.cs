@@ -1,65 +1,44 @@
+using Interfaces;
+using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace MachineLearning_AI
 {
-    [RequireComponent(typeof(NavMeshAgent))]
-    public class AI_StateControl : MonoBehaviour, IAttactable
+    [RequireComponent(typeof(NavMeshAgent), typeof(Collider))]
+    public class AI_StateControl : MonoBehaviour
     {
         [SerializeField] private float InteractionRange = 1.5f;
         [SerializeField] private LayerMask Map_Groundlayer;
         [SerializeField] private float WalkpointRange;
+        [SerializeField] private float SensorTriggerAngle = 45f;
+        [SerializeField] private float SensorTriggerDistance = 15f;
 
-        private AI_Sensor sensor;
-        private NavMeshAgent agent;
-        private AI_Health AI_health;
-        private AI_Weapon AI_weapon;
         private GameObject Target;
+        private AICore AI;
 
         private bool AttackState;
         private bool InteractingState;
         private bool HasWalkpoint;
+        private bool HasWeapon;
         private float Agent_WalkSpeed;
         private float Agent_RunSpeed;
+        public float AttackPriority;
+        private float defaultSensorAngleVal;
+        private float defaultDistanceVal;
         private Vector3 Walkpoint;
-
-
-        public string Name()
-        { return gameObject.name; }
-
-        public bool Attack()
-        {
-            if(AI_weapon != null)
-            {
-                if (AI_weapon.GetWeapon != null)
-                {
-                    return true;
-                }
-                else
-                {
-                    if (FindPickUp())
-                    {
-                        AI_weapon.WeaponObtained(FindPickUp());
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            return false;
-        }// Checks if the Ai has a weapon to attack 
 
         private void Start()
         {
-            gameObject.TryGetComponent<AI_Sensor>( out sensor);// Checks if the AI has a sensor
-            gameObject.TryGetComponent<AI_Health>( out AI_health);// Checks if the AI has a HealthScript
-            gameObject.TryGetComponent<AI_Weapon>(out AI_weapon);// Checks if the AI has a WeaponScript
-            agent = gameObject.GetComponent<NavMeshAgent>();// Gets the NavMesh of the AI;
 
-            Agent_WalkSpeed = agent.speed;
-            Agent_RunSpeed = agent.speed * 2;
+            AI = gameObject.GetComponent<AICore>();
+
+            Agent_WalkSpeed = AI.agent.speed;
+            Agent_RunSpeed = AI.agent.speed * 2;
+
+            defaultSensorAngleVal = AI.sensor.angle;
+            defaultDistanceVal = AI.sensor.DistanceRange;
 
         }
 
@@ -67,31 +46,109 @@ namespace MachineLearning_AI
         {
             SearchForWalkPoint();
             SearchForHeal();
+            PriorityControl();
 
-            if (TargetDetected() && Attack())//Checks if there is a target and can attack;
+            if(!HasWeapon)
+            {CheckWeapon();}
+            else
+            { AddWeapon();}
+
+            if (AI.weapon != null && AI.sensor != null && AI.health != null)
             {
-                AttackState = true;
-                AttackTarget();
-            }
-            else { 
-                agent.speed = Agent_WalkSpeed;
-                AttackState = false;
+                if(TargetDetected() && !HasWeapon && AttackPriority > 0.2f)//check if target in sight and if ai has a weapon
+                {
+                    // Melee Attack
+                    AttackState = true;
+                    AI.weapon.MeleeAttack(Target.transform);
+                }
+
+                if(TargetDetected() && HasWeapon && AttackPriority > 0.2f)//Checks if there is a target and can attack;
+                {
+                    // Weapon Attack
+
+                    AttackState = true;
+                    AI.sensor.angle = SensorTriggerAngle;
+                    AI.sensor.DistanceRange = SensorTriggerDistance;
+                    AI.agent.speed = Agent_RunSpeed;
+                    HasWeapon = false;
+                    AttackTarget();
+                }
+                else if (AttackPriority <= 0.2f)
+                {
+                    Retreat();
+                }
+                else
+                {
+                    AI.sensor.angle = defaultSensorAngleVal;
+                    AI.sensor.DistanceRange = defaultDistanceVal;
+                    AI.agent.speed = Agent_WalkSpeed;
+                    AttackState = false;
+                }
             }
 
-
+   
 
         }
+
+        private void CheckWeapon()
+        {
+            if (AI.weapon != null)
+            {
+                if (AI.weapon.GetWeapon != null)
+                {
+                    HasWeapon = true;
+                }
+                else
+                {
+                    GameObject FindWeapon = FindPickUp();
+                    if (FindWeapon != null)
+                    {
+                        AI.weapon.WeaponObtained(FindWeapon);
+                        HasWeapon = true;
+                    }
+                    else
+                    {
+                        HasWeapon = false;
+                    }
+                }
+            }
+        }// Checks if the Ai has a weapon to attack 
 
         private void AttackTarget()
         {
             // Attacks the Target
-            agent.speed = Agent_RunSpeed;
-            // Need to Face Target;
-
-            agent.SetDestination(Target.transform.position);
-
+            
+            AI.weapon.Attack_Target(Target.transform);
 
         }
+
+        private void PriorityControl()
+        {
+            if(AI.health != null)// validate the component
+            {
+                // Allows the AI to Retreat if their health is below 20%
+                float Health_Percentage = (AI.health.GetHealth / AI.health.Max_Health);
+                AttackPriority = Mathf.Clamp(Health_Percentage, 0, 1);
+
+                if (Health_Percentage < 0.2f)
+                {
+                    AttackPriority = Health_Percentage;
+                }
+                else
+                {
+                    AttackPriority = Health_Percentage;
+                }
+                Debug.Log("Attack Priority: " + AttackPriority);
+
+                //Can Add As Much priority functions as needed
+            }
+        } // Can Add more priority
+
+        private void Retreat()
+        {
+            AI.agent.speed = Agent_RunSpeed;
+            HasWalkpoint = false;
+        }// in development
 
         private void SearchForWalkPoint()
         {
@@ -111,27 +168,26 @@ namespace MachineLearning_AI
 
             if(!AttackState && !InteractingState && HasWalkpoint)
             {
-                agent.SetDestination(Walkpoint);
+                AI.agent.SetDestination(Walkpoint);
 
-                if(agent.remainingDistance < 1f)
+                if(AI.agent.remainingDistance < 1f)
                 {
                     HasWalkpoint  = false;
                 }
             }
 
-        }
+        }//Completed
 
         private bool TargetDetected()
         {
-            if(sensor != null)
+            if(AI.sensor != null)
             {
-                if(sensor.ObjectFound.Count > 0)
+                if(AI.sensor.ObjectFound.Count > 0)
                 {
-                    foreach(GameObject target in sensor.ObjectFound)
+                    foreach(GameObject target in AI.sensor.ObjectFound)
                     {
-                        if (target.CompareTag("Player"))
+                        if (target.CompareTag("Target"))
                         {
-                            Debug.Log("Player Found");
                             Target = target;
                             return true;
                         }
@@ -143,52 +199,58 @@ namespace MachineLearning_AI
                 }
             }
             return false;
-        }
+        } // Completed
 
         private GameObject FindPickUp()
         {
-            if(sensor.ObjectFound.Count > 0)
+            if(AI.sensor.ObjectFound.Count > 0)
             {
-                Debug.Log(sensor.ObjectFound.Count);
-                foreach (GameObject obj in sensor.ObjectFound)
+                foreach (GameObject obj in AI.sensor.ObjectFound)
                 {
-                    if (obj.GetComponent<IAttactable>() != null)
+                    if (obj.GetComponent<IAttactable>() != null && obj.GetComponent<IPickable>() != null)
                     {
-                        
-                        agent.SetDestination(sensor.ObjectFound[0].transform.position);
+                        AI.agent.SetDestination(AI.sensor.ObjectFound[0].transform.position);
 
-                        if(agent.remainingDistance < InteractionRange)
+                        if(AI.agent.remainingDistance < InteractionRange)
                         {
                             Debug.Log("Weapon " + obj.name +" Found");
-                            return sensor.ObjectFound[0];
+                            GameObject weapon = AI.sensor.ObjectFound[0];
+                            obj.GetComponent<IPickable>().PickUp();
+                            AI.sensor.RemoveItem(AI.sensor.ObjectFound[0]);
+                            return weapon;
                         }
                     }break;
                 }
             }
             return null;
+        }// Completed
+
+        private void AddWeapon()
+        {
+            // comming soon
+            
         }
 
         private void SearchForHeal()
         {
-            if (AI_health.NeedHealing && sensor != null && !AI_health.HealingInProgress)
+            if (AI.health.NeedHealing && AI.sensor != null && !AI.health.HealingInProgress)
             {
-                if (sensor.ObjectFound.Count > 0)
+                if (AI.sensor.ObjectFound.Count > 0)
                 {
                     bool CanResume = false;
-                    Debug.Log(sensor.ObjectFound.Count);
 
-                    foreach (GameObject obj in sensor.ObjectFound)
+                    foreach (GameObject obj in AI.sensor.ObjectFound)
                     {
                         if (obj.GetComponent<IHeable>() != null)
                         {
                             InteractingState = true;
                             Debug.Log("Heal found");
-                            agent.SetDestination(sensor.ObjectFound[0].transform.position);
+                            AI.agent.SetDestination(AI.sensor.ObjectFound[0].transform.position);
 
-                            if (agent.remainingDistance < InteractionRange)
+                            if (AI.agent.remainingDistance < InteractionRange)
                             {
-                                AI_health.HealingInProgress = true;
-                                AI_health.Healing(sensor.ObjectFound[0]);
+                                AI.health.HealingInProgress = true;
+                                AI.health.Healing(AI.sensor.ObjectFound[0]);
                                 CanResume = true;
                                 break;
                             }
@@ -205,7 +267,7 @@ namespace MachineLearning_AI
             {
                 SearchForWalkPoint();
             }
-        }
+        } // Completed
 
 
     }

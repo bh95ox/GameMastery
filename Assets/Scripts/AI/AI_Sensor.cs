@@ -22,7 +22,6 @@ namespace MachineLearning_AI
                 return objects;
             }
         }
-        public bool Test = false;
 
         private List<GameObject> objects = new List<GameObject>();
         private readonly Collider[] colliders = new Collider[50];

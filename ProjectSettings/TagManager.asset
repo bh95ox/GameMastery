@@ -12,6 +12,7 @@ TagManager:
   - InventoryManager
   - GameDataManager
   - Bullet
+  - Target
   layers:
   - Default
   - TransparentFX
